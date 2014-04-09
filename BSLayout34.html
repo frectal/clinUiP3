@@ -1,0 +1,980 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">
+
+    <title>CLinUiP3_MVP_2</title>
+
+	<!--
+	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+	
+	<link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+	<link rel="stylesheet" href="http://getbootstrap.com/examples/grid/grid.css">
+	<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/cupertino/jquery-ui.css" rel="stylesheet">
+	-->
+	
+	<script src="/includes/jquery-1.10.1.min.js"></script>
+	<script src="/includes/jquery-ui.min.js"></script>
+	<script src="/includes/bootstrap.min.js"></script>
+	
+	<script src="/includes/canvasjs.min.js"></script>
+	<script src="/includes/inputosaurus.js"></script>
+	
+	
+	<link href="/includes/jquery-ui.css" rel="stylesheet">
+	<link href="/includes/bootstrap.min.css" rel="stylesheet">
+	<link href="/includes/inputosaurus.css" rel="stylesheet">
+		
+	
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/ewdLite/EWD.js"></script>
+	
+	<!-- 
+	
+	
+	
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.css">
+	<link rel="stylesheet" href="http://getbootstrap.com/examples/jumbotron/jumbotron.css">	
+	-->
+	
+	
+	
+	<style>
+    body {
+		padding-top: 50px;
+		padding-bottom: 20px;
+			}
+	table tbody tr:hover {
+			background-color: yellow;
+			cursor: pointer;
+			}	
+			
+			
+    </style>
+	
+	
+   <!-- Bootstrap core CSS 
+	 <link href="../../dist/css/bootstrap.css" rel="stylesheet">
+	 -->
+   
+
+    <!-- Custom styles for this template 
+	<link href="jumbotron.css" rel="stylesheet">
+
+	-->
+    
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+	
+	<script type="text/javascript"> // inc EWD Script
+	
+	//var window.IDtopass2 = 1233444;
+	
+	//var x = 123;
+	//var y= 345;
+	
+	
+	function RowClickHandlers() {
+var table = document.getElementById("PatientsTable"); // get a table
+var rows = table.getElementsByTagName("tr"); // get number of table rows
+    
+    for (i = 0; i < rows.length; i++) {
+        var currentRow = table.rows[i];
+        currentRow.onclick = AlertColumnData(currentRow);
+            }
+}
+
+function AlertColumnData (row){
+         
+            return function() { 
+                   var cell =  row.getElementsByTagName("td")[0]; // get data from the second column .. 0 is first, 1 is second, etc etc..
+                   var id = cell.innerHTML;
+                   //alert("idNumber:" + id);
+				   console.log("Pt ID is " + id);
+				   goGetPtStatements(id);
+                             };
+         }
+
+		 
+localStorage.IDtopass = 1233555;		 
+		 
+function goGetPtStatements(ptID) {
+console.log("Gone to get Patient Statements for patientID :" + ptID);
+//getPatientStatements();
+//setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", ptID);
+//var IDtopass = 1233444;	
+//return IDtopass;
+localStorage.IDtopass= ptID;
+console.log("localStorage_IDtopass = " + localStorage.IDtopass);
+getPatientStatements();
+};
+		 
+		 
+//RowClickHandlers();
+	/*
+   function myFun(e){
+ //function myFunX(){
+		console.log("MyFun");
+		var table = document.getElementById("PatientsTable"); // get a table
+		var rows = table.getElementsByTagName("tr"); // get number of table rows
+		console.log("TR length = " + rows.length);
+		
+		for (i = 0; i < rows.length; i++) {
+			console.log("in here");
+			var currentRow = table.rows[i];
+			currentRow.onclick = AlertColumnData(currentRow);
+            }
+	
+		//if(!e.target)
+		//	alert(e.srcElement.innerHTML);
+		//else
+		//	alert(e.target.innerHTML);
+    };
+    
+	
+	function AlertColumnData (row){
+         
+					console.log("row is " + row);
+           // return function() { 
+					var cell =  row.getElementsByTagName("td")[0]; // get data from the second column .. 0 is first, 1 is second, etc etc..
+					var id = cell.innerHTML;
+					console.log("AlertRow");
+					console.log("IDX: " + id);
+					//alert("idNumber:" + id);
+            //                 }//;
+         
+		 }
+	*/
+	//myFun(event);
+	//
+	
+	function filter (phrase, _id){
+		//console.log(phrase.value);
+		var words = phrase.value.toLowerCase().split(" ");
+		var table = document.getElementById(_id);
+		var ele;
+		for (var r = 1; r < table.rows.length; r++){
+			ele = table.rows[r].innerHTML.replace(/<[^>]+>/g,"");
+		        var displayStyle = 'none';
+		        for (var i = 0; i < words.length; i++) {
+			    if (ele.toLowerCase().indexOf(words[i])>=0)
+				displayStyle = '';
+			    else {
+				displayStyle = 'none';
+				break;
+			    }
+		        }
+			table.rows[r].style.display = displayStyle;
+		}
+	};
+	
+//getABC();
+
+var getChart1 = function () {
+		getChart2(70,35);
+		
+		
+};
+	
+var getChart2 = function (slice1,slice2) {
+
+	// FemalePie = 50;
+	//var MalePie = 50;
+	var MalePie = slice1;
+	var FemalePie = slice2;
+	
+
+	//console.log("Do I know the maleCount ? its ... " + MaleCount); 		
+			
+			var chart = new CanvasJS.Chart("chartContainer",
+				{
+				  title:{
+				   text: "Male/Female Patients" 
+				  },
+				  data: [
+				  {
+					type: "pie",
+					click: function(e){
+							alert(  "The number of Patients that are "+ e.dataPoint.legendText+ " is "+ e.dataPoint.y + " " );
+							if (e.dataPoint.legendText == 'Male')
+								{
+								getPatientListMales();
+								}
+							else if (e.dataPoint.legendText == 'Female')
+								{
+								getPatientListFemales();
+								}
+							console.log(  "Lets go get the "+ e.dataPoint.legendText+ " patients in the PatientTable" );
+							}, 
+					showInLegend: true,
+				   dataPoints: [
+				   {  y: MalePie, legendText:"Male", indexLabel: "Male Patients" },
+				   {  y: FemalePie, legendText:"Female" , indexLabel: "Female Patients"}
+				   ]
+				 }
+				 ]   
+						
+				});
+				chart.render();
+
+}; // end of get Chart	
+
+var getPatientList2 = function () {
+getPatientList();
+
+console.log("Getting FeMale Patient List ");
+
+//filter('Pe', 'StatementsTable');
+//setCodingTable
+
+};	
+
+//var getPatientListMale = function () {
+//getPatientListMales();
+
+//console.log("Getting Male Patient List ");
+
+//filter('Pe', 'StatementsTable');
+//setCodingTable
+
+//};	
+	
+	
+	
+
+var setCodingTable = function(jsondata, field1, field2, field3, field4, filter, filtervalue) {
+console.log ("JsonData is " + jsondata);
+//fieldV = JSON.parse(field1);
+//var jsonfield1 = jsondata.fieldV; 
+console.log ("field1 is " + jsondata[0][field1]);
+//console.log ("fieldV+ is " + jsonfield1; 
+console.log ("field2 is " + jsondata[0][field2]);
+var table2 = '<tr>';
+	table2 = table2 +  '<th>' + "Field1" + '</th>';
+	table2 = table2 +  '<th>' + "Field2" + '</th>';
+	table2 = table2 +  '<th>' + "Field3" + '</th>';
+	//table2 = table2 +  '<th>' + "M/F" + '</th>';
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//for (var i = 0; i < results.headings.length; i++) {
+	table2 = table2 + '</tr>';
+	console.log ("in the table function");	
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	for (var i = 0; i < jsondata.length; i++) {
+		
+		if (filter == "All")
+		{
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		table2 = table2 + '<td>' + jsondata[i][field3] + '</td>';	
+		//table2 = table2 + '<td>' + jsondata[i][field4] + '</td>';
+		}
+		else	
+		//if (jsondata[i][filter] != 'Male')
+		if (jsondata[i][filter] == filtervalue)
+		{
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		table2 = table2 + '<td>' + jsondata[i][field3] + '</td>';	
+		//table2 = table2 + '<td>' + jsondata[i][field4] + '</td>';
+		}
+		
+		
+	}
+	table2 = table2 + '</tr>';
+//table2 = table2 + "testInfo" + '</tr>';
+//table2 = table2 + "testInfo2:" + input  + '</tr>';
+//document.getElementById('headingPanelTable').innerHTML = table;
+//return table2;
+document.getElementById('PatientsTable').innerHTML = table2;
+}; 
+
+
+
+var setCounter = function(jsondata, fieldtocount, whattocount) {
+	console.log ("CounterData: "+ jsondata + ":" + "@" + jsondata.length + "(" + fieldtocount + ":" + whattocount);
+	console.log (JSON.stringify(jsondata));
+	console.log ("Generic Counter function");	
+	var TotalCounter = 0;
+	var SubCounter = 0;
+
+	for (var i = 0; i < jsondata.length; i++) {
+	console.log (" in the counter loop");
+	console.log ("counterdata is " + jsondata[i][fieldtocount])
+
+	if (jsondata[i][fieldtocount] != undefined)
+		{
+		TotalCounter = TotalCounter + 1
+			if (jsondata[i][fieldtocount] == whattocount)
+			{
+			SubCounter = SubCounter + 1
+			}
+		} // end of if undefined to strip out poor data
+	}
+	MaleCount = SubCounter;
+	FemaleCount = TotalCounter - SubCounter;
+	
+	console.log ("The Total Count is " + TotalCounter + " The Male Count is " + SubCounter)
+		
+	return MaleCount, FemaleCount;
+}; 
+
+
+
+var setStatementsTable = function(jsondata, field1, field2, filter) {
+console.log ("JsonData is " + jsondata);
+//fieldV = JSON.parse(field1);
+//var jsonfield1 = jsondata.fieldV; 
+console.log ("field1 is " + jsondata[0][field1]);
+//console.log ("fieldV+ is " + jsonfield1; 
+console.log ("field2 is " + jsondata[0][field2]);
+var table2 = '<tr>';
+	table2 = table2 +  '<th>' + "ID#~" + '</th>';
+	table2 = table2 +  '<th>' + "Data~D" + '</th>';
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//for (var i = 0; i < results.headings.length; i++) {
+	table2 = table2 + '</tr>';
+	console.log ("in the table function");	
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//if (filter == jsondata[0][field1])
+	//{
+		for (var i = 0; i < jsondata.length; i++) {
+		//console.log ("Statements data ID " + jsondata[i][filter]);
+		console.log ("Statements data ID " + filter);
+		if (filter == jsondata[i][field1])
+		{
+		console.log("Hit a match");
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		} // end of if
+		
+		} // end of for
+	//else
+	//table2 = table2 + '<tr>';
+	//table2 = table2 + '<td>' + "No Match"  + '</td>';
+	//table2 = table2 + '<td>' + "No Match"  + '</td>';
+	//} // end of if
+	table2 = table2 + '</tr>';
+//table2 = table2 + "testInfo" + '</tr>';
+//table2 = table2 + "testInfo2:" + input  + '</tr>';
+//document.getElementById('headingPanelTable').innerHTML = table;
+//return table2;
+document.getElementById('PtID4Statements').innerHTML = "Details for Pt ID" + filter;
+document.getElementById('StatementsTable').innerHTML = table2;
+}; 
+
+	
+//	setCodingTable(testPatients.Patients, "ID", "Name");
+//var IDtopass = 1233444;	
+/// EWD script	
+	
+EWD.application = {name: 'clinuip3'};
+
+var getPatientList = function() {
+EWD.sockets.sendMessage({
+type:"getPatientList",
+//type:"getHelloWorldY",
+});
+}; //end of getMessage function
+
+var getPatientListMales = function() {
+EWD.sockets.sendMessage({
+type:"getPatientListMales",
+//type:"getHelloWorldY",
+});
+}; //end of getMessage function
+
+
+var getPatientListFemales = function() {
+EWD.sockets.sendMessage({
+type:"getPatientListFemales",
+});
+}; //end of getMessage function
+
+var getPatientStatements = function() {
+EWD.sockets.sendMessage({
+type:"getPatientStatements",
+//type:"getHelloWorldY",
+});
+console.log("start PatientStatements fxn");
+}; //end of getMessage function
+
+
+var add2PatientM = function() {
+EWD.sockets.sendMessage({
+type:"add2PatientM",
+params: {
+	//ID: 959529595,
+	//Age: 95,
+	//Name: "Nelson Mandela IV"
+	//var patientY = {
+		"ID": document.getElementById('PatientID').value,
+		"Age": document.getElementById('PatientAge').value,
+		"Name": document.getElementById('PatientNameInput').value,
+		"Sex": document.getElementById('PatientSex').value
+	//	};
+	
+	
+	}
+//type:"getHelloWorldY",
+});
+console.log("sending message to M");
+}; //end of add2PaientM function
+
+
+var setUpStatementsWindow = function() {
+//window.open("#myModal2");
+//window.open("www.google.com");
+//$("#myModal").modal('show');
+};
+
+$("#myModal").modal('show');
+setUpStatementsWindow();
+
+var addStatements2PatientEHR = function() {
+
+var statement = "abs";
+
+
+EWD.sockets.sendMessage({
+type:"addStatements2PatientEHR",
+params: {
+		"ID": document.getElementById('PatientID').value,
+		"Statement": statement
+		}
+
+
+});
+/*
+*/
+console.log("sending Statement to M");
+}; //end of add2PaientM function
+
+
+
+
+
+
+//var window.IDtopass2 = 1233444;
+
+EWD.onSocketMessage = function(messageObj) {
+
+if (messageObj.type === 'getPatientList') {
+//if (messageObj.type === 'getHelloWorldY') {
+console.log ('Got a message back from the server I hoped 4:');
+console.log (JSON.stringify(messageObj.message));
+
+var ListPatients = {
+	Patients: messageObj.message
+};
+
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "All");
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+console.log("MaleCount is " + MaleCount);
+console.log("FemaleCount is " + FemaleCount);
+
+getChart2(MaleCount, FemaleCount);
+// link to outside element ie chart
+//chart.render();
+};
+
+
+if (messageObj.type === 'getPatientListMales') {
+var ListPatients = {
+	Patients: messageObj.message
+};
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "Sex", "Male");
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+console.log("MaleCount is " + MaleCount);
+console.log("FemaleCount is " + FemaleCount);
+
+getChart2(MaleCount, FemaleCount);
+};
+
+
+if (messageObj.type === 'getPatientListFemales') {
+
+var ListPatients = {
+	Patients: messageObj.message
+};
+
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "Sex", "Female");
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+getChart2(MaleCount, FemaleCount);
+
+};
+
+//console.log(ListPatients.Patients);
+
+//var IDtopass = 1233444;
+var IDtopass = localStorage.IDtopass;
+
+if (messageObj.type === 'getPatientStatements') {
+//if (messageObj.type === 'getHelloWorldY') {
+console.log ('Got Patients Statements back from the server I hoped 4:');
+console.log (JSON.stringify(messageObj.message));
+
+var ListPatientStatements = {
+	Statements: messageObj.message
+};
+
+//setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", 1233444);
+setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", IDtopass);
+};
+
+
+
+}; // end of onSocketMessage
+</script>
+	
+	
+  </head>
+
+  <body onLoad="EWD.isReady()">
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">ClinUiPv3</a>
+		  
+		  
+        </div>
+		
+		 <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#about">About</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">GoTo<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Patient Data</a></li>
+              </ul>
+            </li>
+          </ul>
+		  <form class="navbar-form navbar-right" role="form">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+		  
+		</div><!--/.navbar-collapse -->
+		<!--/.navbar-collapse
+        <div class="navbar-collapse collapse">
+          <form class="navbar-form navbar-right" role="form">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+        </div> -->
+      </div>
+    </div>
+
+	
+	
+	
+     <div class="container">
+      <!-- Example row of columns -->
+	  <div class="row">
+	  </div>
+	  
+      <div class="row">
+	  
+	 
+	  <div id="leftCol" class="col-md-2">
+              <div class="well">
+			  <!--
+                <ul class="nav nav-pills nav-stacked">
+					<li class="nav-header disabled"><a>Headings</a></li>
+					<li id="head-list1"><a href="#">Heading1</a></li>
+					<li id="head-list2"><a href="#">Heading2</a></li>
+					<li id="head-list3"><a href="#">Heading3</a></li>
+					 </ul>
+					 -->
+				<div id="chartContainer" style="height: 250px; width: 100%;"> </div> 
+				<button class="btn btn-primary btn-sm" onClick="getChart1()">GetChart</button>	 
+              </div>
+            </div>
+	 
+	  <!--
+        <div class="col-md-3">
+		<div class="well">
+          <h2>*</h2>
+          <p> Welcome </p>
+          </div>
+		</div>
+		-->
+		
+        <div class="col-md-3 col-md-offset-1">
+			<div class="panel-body" id="allergiesPnl">
+						<div class="panel panel-info">
+							<div class="panel-heading">Patients</div>
+							<input type="text" class="form-control" placeholder="Filter" onkeyup="filter(this, 'PatientsTable', '1')">
+							
+							<div>
+								<div class="table-responsive">
+								<!--	<table class="table display"  onclick="myFun(event)" id="PatientsTable"> 	-->
+									<table class="table display" onclick="RowClickHandlers()" id="PatientsTable">
+									<thead>
+												  <tr>
+													<th>#</th>
+													<th>First Name</th>
+													<th>Last Name</th>
+													<th>Age</th>
+												  </tr>
+												</thead>
+												<tbody>
+												  <tr>
+													<td>1</td>
+													<td>Mark</td>
+													<td>Otto</td>
+													<td>45</td>
+												  </tr>
+												  <tr>
+													<td>2</td>
+													<td>Jacob</td>
+													<td>Thornton</td>
+													<td>8</td>
+												  </tr>
+												  <tr>
+													<td>3</td>
+													<td>Larry</td>
+													<td>the Bird</td>
+													<td>78</td>
+												  </tr>
+												</tbody>
+																			
+									</table>
+								</div>
+						</div>					
+							<div class="panel-footer">
+								<button href="#" id="newAllergyBtn" class="btn btn-primary" onClick="getPatientList2()">Get Patients</button>
+								<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal2">Add a Patient</button>
+							</div>
+						</div>					
+					
+			</div>  
+     	</div>
+	 
+        <div class="col-md-5 col-md-offset-1">
+         <div class="panel panel-default">
+		 
+		  <div class="panel-body">
+		  
+						<div class="panel panel-info">
+								<div class="panel-heading" id="PtID4Statements">Details</div>
+								
+								<input type="text" class="form-control" placeholder="Filter" onkeyup="filter(this, 'StatementsTable', '1')">
+								<!---->
+								<div>
+									<div class="table-responsive">
+										<table class="table" id="StatementsTable">
+										<thead>
+													  <tr>
+														<th>#</th>
+														<th>Date</th>
+														<th>Note</th>
+														<th>Number</th>
+													  </tr>
+													</thead>
+													<tbody>
+													  <tr>
+														<td>1</td>
+														<td>2/2</td>
+														<td>Admitted to ED. Time 2134h</td>
+														<td>45</td>
+													  </tr>
+													  <tr>
+														<td>2</td>
+														<td>4/2</td>
+														<td>Thoracic Pain noted. It was very bad. He had spent ages trying to get to sleep.</td>
+														<td>8</td>
+													  </tr>
+													  <tr>
+														<td>3</td>
+														<td>7/2</td>
+														<td>Paracetamol 1g qds x 5/7</td>
+														<td>78</td>
+													  </tr>
+													</tbody>
+																				
+										</table>
+									</div>
+							</div>					
+								<div class="panel-footer">
+									<button href="#" id="newNoteBtn" class="btn btn-primary" onClick="getPatientStatements()">Get Statements</button>
+									<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#Btn3">Enter Patient Data</button>
+								</div>
+						</div>
+			<!--
+			<h2>Detail- Basic panel example</h2>
+			<p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+		   -->
+		  </div>
+		 
+		  
+		</div>
+
+		           
+        </div>
+		</div>
+
+		
+<!--		
+<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal2">Add a Patient</button>
+<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">Enter Patient Data</button>
+-->
+
+<!-- Modal -->
+<div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Data Entry Widget</h4>
+      </div>
+      <div class="modal-body">
+       <div class="container">
+			<h3>Data Widget</h3>
+			<input type="text" class="form-control" id="PatientID" placeholder="Enter ID_">
+			<input type="textarea" class="form-control"  id="widget3" value=""/>
+		</div> <!-- /container -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>		
+
+<!-- Button trigger modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Patient</h4>
+      </div>
+      <div class="modal-body">
+			<form class="form-inline" role="form">
+				 <div class="form-group">
+						<label class="sr-only" for="PatientNameInput">Patient ID</label>
+								<input type="text" class="form-control" id="PatientID" placeholder="Enter Patient ID">
+						<label class="sr-only" for="PatientNameInput">Patient Name</label>
+								<input type="text" class="form-control" id="PatientNameInput" placeholder="Enter Patient Name">
+						<label class="sr-only" for="PatientAge">Patient Age</label>
+								<input type="text" class="form-control" id="PatientAge" placeholder="Enter Age">
+						<label class="sr-only" for="PatientSex">Patient Sex - Male/Female</label>
+								<input type="text" class="form-control" id="PatientSex" placeholder="Male/Female">	
+				</div>
+			</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="add2PatientM()">Save changes</button>
+      </div>
+    </div>
+  </div>
+  
+  
+  
+  
+</div>		
+
+
+      <hr>
+
+      <footer>
+        <p>ClinUIP v3 MVP 2014</p>
+      </footer>
+	  
+    </div> 
+
+	
+	
+	
+	
+	
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster 
+	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	 <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+	-->
+   
+	<script type="text/javascript">
+	$(document).ready(function(){
+			//$('table tbody tr').click(function(){
+			//$('tr').click(function(){
+			$('#StatementsTable').click(function(){  // note the # before the ID
+							console.log("clicker");
+							alert($(this).text());
+							console.log($(this).text());
+									}		
+									);
+							
+			//$("#myModal").modal('show');
+			$("#myModal3").modal({
+								show: false
+							});
+
+			$("#Btn3").click(function(e){
+				$("#myModal3").modal("show");
+				console.log("Hit button AB2");
+			});
+			
+			
+			
+			//if (!document.getElementsByTagName || !document.createTextNode) return;
+			//	var rows = document.getElementById('#StatementsTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+			//		for (i = 0; i < rows.length; i++) {
+			//			rows[i].onclick = function() 
+			//				{
+			//				alert(this.rowIndex + 1);
+			//				}
+			//			}			
+			
+			
+			//$("#PatientsTable").on('click','td',function (e) {
+			//	var id = $(this).closest('tr').attr('id');
+				//alert(id);
+			//});
+			
+			/// male /female chart script
+			/*
+			var FemalePie = 60;
+			var MalePie = 40;
+			
+			var chart = new CanvasJS.Chart("chartContainer",
+				{
+				  title:{
+				   text: "Male/Female Patients" 
+				  },
+				  data: [
+				  {
+					type: "pie",
+					click: function(e){
+							alert(  "The number of Patients that are "+ e.dataPoint.legendText+ " is "+ e.dataPoint.y + " " );
+							console.log(  "Lets go get the "+ e.dataPoint.legendText+ " patients in the PatientTable" );
+							}, 
+					showInLegend: true,
+				   dataPoints: [
+				   {  y: MalePie, legendText:"Male", indexLabel: "Male Patients" },
+				   {  y: FemalePie, legendText:"Female" , indexLabel: "Female Patients"}
+				   ]
+				 }
+				 ]   
+						
+				});
+				chart.render();
+			*/
+
+			/// Data input widget script	
+				$('#widget3').inputosaurus({
+				width : '350px',
+				autoCompleteSource : 
+				//"autoCompleteSource": // need to lose the quotes around the name autoComp
+				// this list is taken from a json array done on jsoneditoronline.org
+				[
+					"Paracetamol 1 g qds",
+					"The pain was very bad",
+					"Order: EKG",
+					"Result:",
+					"Medication: 1 tablet"
+				  ]
+				 , // need to add in that comma
+				outputDelimiter : ' OR ',
+				parseHook : function(valArr){
+					return $.map(valArr, function(val){
+						val = $.trim(val);
+						return /\s/.test(val) ? '"' + val + '"' : val;
+					});
+				},
+				change : function(ev){
+					$('#widget3_reflect').val(ev.target.value);
+				}
+			});
+
+			$('.markup').on('click', 'a', function(ev){ $(ev.currentTarget).next('div').toggle(); });			
+							
+							
+							
+							
+								
+								
+	}); // end of document ready script
+	
+		</script>
+	
+	<script type="text/javascript">
+	/*
+  window.onload = function () {
+    var chart = new CanvasJS.Chart("chartContainer",
+    {
+      title:{
+       text: "Male/Female Patients" 
+      },
+      data: [
+      {
+        type: "pie",
+		click: function(e){
+				alert(  "The number of Patients that are "+ e.dataPoint.legendText+ " is "+ e.dataPoint.y + " " );
+				}, 
+		showInLegend: true,
+       dataPoints: [
+       {  y: 55, legendText:"Male", indexLabel: "Male Patients" },
+       {  y: 45, legendText:"Female" , indexLabel: "Female Patients"}
+       ]
+     }
+     ]   
+		    
+    });
+    chart.render();
+	
+	
+	//document.getElementById('chartContainer').innerHTML = chart
+  }
+  
+  */
+  </script>
+	
+	
+  </body>
+</html>
