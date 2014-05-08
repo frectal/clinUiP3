@@ -1,0 +1,798 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">
+
+    <title>CLinUiP3_MVP_2</title>
+
+	<!--
+	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+	
+	<link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+	<link rel="stylesheet" href="http://getbootstrap.com/examples/grid/grid.css">
+	<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/cupertino/jquery-ui.css" rel="stylesheet">
+	-->
+	
+	<script src="/includes/jquery-1.10.1.min.js"></script>
+	<script src="/includes/jquery-ui.min.js"></script>
+	<script src="/includes/bootstrap.min.js"></script>
+	
+	<script src="/includes/canvasjs.min.js"></script>
+	<script src="/includes/inputosaurus.js"></script>
+	
+	
+	<link href="/includes/jquery-ui.css" rel="stylesheet">
+	<link href="/includes/bootstrap.min.css" rel="stylesheet">
+	<link href="/includes/inputosaurus.css" rel="stylesheet">
+		
+	
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/ewdLite/EWD.js"></script>
+	
+	<!-- 	
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.css">
+	<link rel="stylesheet" href="http://getbootstrap.com/examples/jumbotron/jumbotron.css">	
+	-->
+
+	<style>
+    body {
+		padding-top: 50px;
+		padding-bottom: 20px;
+			}
+	table tbody tr:hover {
+			background-color: yellow;
+			cursor: pointer;
+			}	
+			
+			
+    </style>
+	
+		<script type="text/javascript">
+		
+		// used document ready to set some of this up as a hack
+		// am sure there are better ways
+		
+	$(document).ready(function(){
+			// would like to know better ways to do this
+			// this helps with alerting and console logging where folk click on the application
+			$('#StatementsTable').click(function(){  // note the # before the ID
+							console.log("clicker");
+							alert($(this).text());
+							console.log($(this).text());
+									}		
+									);
+							
+			//this is to keep the modal window hidden
+			$("#myModal3").modal({
+								show: false
+							});
+							
+			// this is to show that same modal window
+			$("#Btn3").click(function(e){
+				$("#myModal3").modal("show");
+				console.log("Hit button ABCB=DEF2");
+								
+			});
+			
+			
+			/// Data input widget script	
+				$('#widget3').inputosaurus({
+				width : '350px',
+				autoCompleteSource : 
+				//"autoCompleteSource": // need to lose the quotes around the name autoComp
+				// this list is taken from a json array done on jsoneditoronline.org
+				// I would plan to grow this list to a much larger range
+				[
+					"Paracetamol 1 g qds",
+					"The pain was very bad",
+					"Order: EKG",
+					"Result:",
+					"Medication: 1 tablet"
+				  ]
+				 , // need to add in that comma
+				outputDelimiter : ';',
+				parseHook : function(valArr){
+					return $.map(valArr, function(val){
+						val = $.trim(val);
+						return /\s/.test(val) ? '"' + val + '"' : val;
+					});
+				},
+				change : function(ev){
+					$('#widget3_reflect').val(ev.target.value);
+				}
+			});
+
+			// note sure what this line does...?
+			$('.markup').on('click', 'a', function(ev){ $(ev.currentTarget).next('div').toggle(); });			
+							
+									
+	}); // end of document ready script
+	
+	</script>
+	
+	
+  <script type="text/javascript"> // inc EWD Script
+  
+// this script sets up a counter to take a json document and calculate the Male/Female numbers
+  //this function takes data from the JSON document and creates a counter
+// in this case to create Male & female patients
+// would be better to make this more generic
+// then the values help to create the pie chart
+
+var setCounter = function(jsondata, fieldtocount, whattocount) {
+	console.log ("CounterData: "+ jsondata + ":" + "@" + jsondata.length + "(" + fieldtocount + ":" + whattocount);
+	console.log (JSON.stringify(jsondata));
+	console.log ("Generic Counter function");	
+	var TotalCounter = 0;
+	var SubCounter = 0;
+
+	for (var i = 0; i < jsondata.length; i++) {
+	console.log (" in the counter loop");
+	console.log ("counterdata is " + jsondata[i][fieldtocount])
+
+	if (jsondata[i][fieldtocount] != undefined)
+		{
+		TotalCounter = TotalCounter + 1
+			if (jsondata[i][fieldtocount] == whattocount)
+			{
+			SubCounter = SubCounter + 1
+			}
+		} // end of if undefined to strip out poor data
+	}
+	MaleCount = SubCounter;
+	FemaleCount = TotalCounter - SubCounter;
+	
+	console.log ("The Total Count is " + TotalCounter + " The Male Count is " + SubCounter)
+		
+	return MaleCount, FemaleCount;
+}; 
+	
+	
+// this is the starter Chart function
+// its triggered by the GetChart button and uses these test values to render the chart
+var getChart1 = function () {
+		getChart2(70,35);
+		
+		
+};	
+	
+// this is the main Chart function , I pass it 2 values in this case (Males & Females numbers)	
+// it also triggers an events to get Male and Female Patient lists when you click on the pie slices 
+// it uses ChartJS library
+/// would like to make this more generic
+
+var getChart2 = function (slice1,slice2) {
+
+	var MalePie = slice1;
+	var FemalePie = slice2;
+	
+
+			
+			var chart = new CanvasJS.Chart("chartContainer",
+				{
+				  title:{
+				   text: "Male/Female Patients" 
+				  },
+				  data: [
+				  {
+					type: "pie",
+					click: function(e){
+							alert(  "The number of Patients that are "+ e.dataPoint.legendText+ " is "+ e.dataPoint.y + " " );
+							if (e.dataPoint.legendText == 'Male')
+								{
+								getPatientListMales(); // this click event is where the event triggers getting the Male patients 
+								}
+							else if (e.dataPoint.legendText == 'Female')
+								{
+								getPatientListFemales(); // this click event is where the event triggers getting the FeMale patients
+								}
+							console.log(  "Lets go get the "+ e.dataPoint.legendText+ " patients in the PatientTable" );
+							}, 
+					showInLegend: true,
+				   dataPoints: [
+				   {  y: MalePie, legendText:"Male", indexLabel: "Male Patients" },
+				   {  y: FemalePie, legendText:"Female" , indexLabel: "Female Patients"}
+				   ]
+				 }
+				 ]   
+						
+				});
+				chart.render();
+
+}; // end of get Chart	
+
+
+// this little function is triggered by the Get Patients button and gets All patients.. not just Male/Female as the chart clicks do.. 
+var getPatientList2 = function () {
+	getPatientList();
+	console.log("Getting All Patients from the List ");
+	};	
+	
+	
+	
+// this messy function takes Patients from JSON document and put them in the middle table, also using a filter .. used for eg Male/Female patients as you will see later,
+	
+var setCodingTable = function(jsondata, field1, field2, field3, field4, filter, filtervalue) {
+console.log ("JsonData is " + jsondata);
+//fieldV = JSON.parse(field1);
+//var jsonfield1 = jsondata.fieldV; 
+console.log ("field1 is " + jsondata[0][field1]);
+//console.log ("fieldV+ is " + jsonfield1; 
+console.log ("field2 is " + jsondata[0][field2]);
+var table2 = '<tr>';
+	table2 = table2 +  '<th>' + "Field1" + '</th>';
+	table2 = table2 +  '<th>' + "Field2" + '</th>';
+	table2 = table2 +  '<th>' + "Field3" + '</th>';
+	//table2 = table2 +  '<th>' + "M/F" + '</th>';
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//for (var i = 0; i < results.headings.length; i++) {
+	table2 = table2 + '</tr>';
+	console.log ("in the table function");	
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	for (var i = 0; i < jsondata.length; i++) {
+		
+		if (filter == "All")
+		{
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		table2 = table2 + '<td>' + jsondata[i][field3] + '</td>';	
+		//table2 = table2 + '<td>' + jsondata[i][field4] + '</td>';
+		}
+		else	
+		//if (jsondata[i][filter] != 'Male')
+		if (jsondata[i][filter] == filtervalue)
+		{
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		table2 = table2 + '<td>' + jsondata[i][field3] + '</td>';	
+		//table2 = table2 + '<td>' + jsondata[i][field4] + '</td>';
+		}
+		
+		
+	}
+	table2 = table2 + '</tr>';
+//table2 = table2 + "testInfo" + '</tr>';
+//table2 = table2 + "testInfo2:" + input  + '</tr>';
+//document.getElementById('headingPanelTable').innerHTML = table;
+//return table2;
+document.getElementById('PatientsTable').innerHTML = table2;
+}; 
+
+
+
+//### these 2 functions combine to 	get the Patient ID from the middle table and trigger an event to get the related Patient Statements
+function RowClickHandlers() {
+	var table = document.getElementById("PatientsTable"); // get a table
+	var rows = table.getElementsByTagName("tr"); // get number of table rows
+		
+		for (i = 0; i < rows.length; i++) {
+			var currentRow = table.rows[i];
+			currentRow.onclick = AlertColumnData(currentRow);
+				}
+	}
+
+function AlertColumnData (row){
+         
+            return function() { 
+                   var cell =  row.getElementsByTagName("td")[0]; // get data from the second column .. 0 is first, 1 is second, etc etc..
+                   var id = cell.innerHTML;
+                   //alert("idNumber:" + id);
+				   console.log("Pt ID is " + id);
+				   goGetPtStatements(id);
+                             };
+         }
+
+//#### end of combined functions to get the Patient ID data from the middle table
+
+
+// this is hack to pass the patient ID into the EWD script code below		 
+// this was the first time I used it and it is now redundant
+localStorage.IDtopass = 1233555;		 
+// you'll see that I use it again in the goGetPtStatements function below
+
+
+// this takes the patient ID and it then gets the related Patient Statements		 
+function goGetPtStatements(ptID) {
+console.log("Gone to get Patient Statements for patientID :" + ptID);
+localStorage.IDtopass= ptID;
+console.log("localStorage_IDtopass = " + localStorage.IDtopass);
+getPatientStatements();
+};
+	
+
+// this messy function takes the Patient statements and puts it in a table, filtered by Patient ID as per below
+
+var setStatementsTable = function(jsondata, field1, field2, filter) {
+console.log ("JsonData is " + jsondata);
+//fieldV = JSON.parse(field1);
+//var jsonfield1 = jsondata.fieldV; 
+console.log ("field1 is " + jsondata[0][field1]);
+//console.log ("fieldV+ is " + jsonfield1; 
+console.log ("field2 is " + jsondata[0][field2]);
+var table2 = '<tr>';
+	table2 = table2 +  '<th>' + "ID#~" + '</th>';
+	table2 = table2 +  '<th>' + "Data~D" + '</th>';
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//for (var i = 0; i < results.headings.length; i++) {
+	table2 = table2 + '</tr>';
+	console.log ("in the table function");	
+	//for (var i = 0; i < testPatients.Patients.length; i++) {
+	//if (filter == jsondata[0][field1])
+	//{
+		for (var i = 0; i < jsondata.length; i++) {
+		//console.log ("Statements data ID " + jsondata[i][filter]);
+		console.log ("Statements data ID " + filter);
+		if (filter == jsondata[i][field1])
+		{
+		console.log("Hit a match");
+		table2 = table2 + '<tr>';
+		table2 = table2 + '<td>' + jsondata[i][field1] + '</td>';
+		table2 = table2 + '<td>' + jsondata[i][field2] + '</td>';	
+		} // end of if
+		
+		} // end of for
+	//else
+	//table2 = table2 + '<tr>';
+	//table2 = table2 + '<td>' + "No Match"  + '</td>';
+	//table2 = table2 + '<td>' + "No Match"  + '</td>';
+	//} // end of if
+	table2 = table2 + '</tr>';
+//table2 = table2 + "testInfo" + '</tr>';
+//table2 = table2 + "testInfo2:" + input  + '</tr>';
+//document.getElementById('headingPanelTable').innerHTML = table;
+//return table2;
+document.getElementById('PtID4Statements').innerHTML = "Details for Pt ID" + filter;
+document.getElementById('StatementsTable').innerHTML = table2;
+//document.getElementById('PatientID').innerHTML = filter;
+$('#PatientID').val(filter); // needed to use this approach to pass value to modal form text element
+}; 
+
+
+
+// this is a filter function for use within the tables
+// I grabbed this from somewhere on the net and it seems to work ok		 
+	function filter (phrase, _id){
+		//console.log(phrase.value);
+		var words = phrase.value.toLowerCase().split(" ");
+		var table = document.getElementById(_id);
+		var ele;
+		for (var r = 1; r < table.rows.length; r++){
+			ele = table.rows[r].innerHTML.replace(/<[^>]+>/g,"");
+		        var displayStyle = 'none';
+		        for (var i = 0; i < words.length; i++) {
+			    if (ele.toLowerCase().indexOf(words[i])>=0)
+				displayStyle = '';
+			    else {
+				displayStyle = 'none';
+				break;
+			    }
+		        }
+			table.rows[r].style.display = displayStyle;
+		}
+	};
+	
+	
+
+
+// this is where the EWD scripts come in and start the communication to EWD on Node.js and the M /JSON database
+	
+EWD.application = {name: 'clinuip3'};
+
+//these functions are triggered by client side events
+// they then send a related message to the node.js side for processing
+//when the node.js returns data etc the EWD on Socket messages below then process the data on the client side
+
+// the first gets the Patient list
+var getPatientList = function() {
+EWD.sockets.sendMessage({
+type:"getPatientList",
+//type:"getHelloWorldY",
+});
+}; //end of getMessage function
+
+// then have reused to get Male Patients// should be a better way
+var getPatientListMales = function() {
+EWD.sockets.sendMessage({
+type:"getPatientListMales",
+//type:"getHelloWorldY",
+});
+}; //end of getMessage function
+
+
+// have reused to get Female Patients// should be a better way
+var getPatientListFemales = function() {
+EWD.sockets.sendMessage({
+type:"getPatientListFemales",
+});
+}; //end of getMessage function
+
+// now a function to get the Patient Statements
+var getPatientStatements = function() {
+EWD.sockets.sendMessage({
+type:"getPatientStatements",
+//type:"getHelloWorldY",
+});
+console.log("start PatientStatements fxn");
+}; //end of getMessage function
+
+// now to add a Patient to the M database
+var add2PatientM = function() {
+EWD.sockets.sendMessage({
+type:"add2PatientM",
+params: {
+		"ID": document.getElementById('PatientID').value,
+		"Age": document.getElementById('PatientAge').value,
+		"Name": document.getElementById('PatientNameInput').value,
+		"Sex": document.getElementById('PatientSex').value
+		}
+//type:"getHelloWorldY",
+});
+
+console.log("sending message to M");
+}; //end of add2PaientM function
+
+
+
+// now to add a Patient Statement to the M database
+var addStatements2PatientEHR = function() {
+EWD.sockets.sendMessage({
+type:"addStatements2PatientEHR",
+params: {
+		"ID": document.getElementById('PatientID').value,
+		"Statement": document.getElementById('widget3').value
+		}
+});
+console.log("PtStatement ParaMs:" + params);
+console.log("sending Statement to M");
+}; //end of add2PaientM function
+
+
+////////////////////////
+// These on socket messages are used to get the web socket messages over and back to the node.js
+// Here is where the node.js returns data etc the EWD onSocketMessages below to process the data on the client side
+
+
+
+EWD.onSocketMessage = function(messageObj) {
+
+
+// this gets the patient list
+// then it sets the Male/Female counter and the pie chart
+// then it sets the Patient List to the Middle Table
+
+if (messageObj.type === 'getPatientList') {
+
+console.log ('Got a message back from the server I hoped 4:');
+console.log (JSON.stringify(messageObj.message));
+
+var ListPatients = {
+	Patients: messageObj.message
+};
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+console.log("MaleCount is " + MaleCount);
+console.log("FemaleCount is " + FemaleCount);
+getChart2(MaleCount, FemaleCount);
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "All");
+// link to outside element ie chart
+//chart.render();
+};
+
+
+// this gets the Male patient list
+// then it sets the Male/Female counter and the pie chart
+// then it sets the Patient List to the Middle Table
+
+if (messageObj.type === 'getPatientListMales') {
+var ListPatients = {
+	Patients: messageObj.message
+};
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+console.log("MaleCount is " + MaleCount);
+console.log("FemaleCount is " + FemaleCount);
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "Sex", "Male");
+
+getChart2(MaleCount, FemaleCount);
+};
+
+
+// this gets the Male patient list
+// then it sets the Male/Female counter and the pie chart
+// then it sets the Patient List to the Middle Table
+if (messageObj.type === 'getPatientListFemales') {
+
+var ListPatients = {
+	Patients: messageObj.message
+};
+
+setCounter(ListPatients.Patients, "Sex", "Male");
+getChart2(MaleCount, FemaleCount);
+setCodingTable(ListPatients.Patients, "ID", "Name", "Age", null, "Sex", "Female");
+};
+
+
+// this picks up the messy hack above that allows to pass the Patient ID into this set of Socket messages
+var IDtopass = localStorage.IDtopass;
+
+
+// this function takes the Patient ID, gets the related Patient statements from the M database and then sets the Statements up in the right hand table
+if (messageObj.type === 'getPatientStatements') {
+console.log ('Got Patients Statements back from the server I hoped 4:');
+console.log (JSON.stringify(messageObj.message));
+
+var ListPatientStatements = {
+	Statements: messageObj.message
+};
+
+setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", IDtopass);
+};
+
+
+
+}; // end of onSocketMessage
+</script>
+	
+	
+  </head>
+
+  <body onLoad="EWD.isReady()">
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">ClinUiPv3</a>
+		  
+		  
+        </div>
+		
+		 <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#about">About</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">GoTo<b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Patient Data</a></li>
+              </ul>
+            </li>
+          </ul>
+		  <form class="navbar-form navbar-right" role="form">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+		  
+		</div><!--/.navbar-collapse -->
+      </div>
+    </div>
+
+	
+	
+	
+     <div class="container">
+      <!-- Example row of columns -->
+	  <div class="row">
+	  </div>
+	  
+      <div class="row">
+	  
+	 
+	  <div id="leftCol" class="col-md-2">
+              <div class="well">
+				<div id="chartContainer" style="height: 250px; width: 100%;"> </div> 
+				<button class="btn btn-primary btn-sm" onClick="getChart1()">GetChart</button>	 
+              </div>
+            </div>
+		
+        <div class="col-md-3 col-md-offset-1">
+			<div class="panel-body" id="allergiesPnl">
+						<div class="panel panel-info">
+							<div class="panel-heading">Patients</div>
+							<input type="text" class="form-control" placeholder="Filter" onkeyup="filter(this, 'PatientsTable', '1')">
+							
+							<div>
+								<div class="table-responsive">
+								<!--	<table class="table display"  onclick="myFun(event)" id="PatientsTable"> 	-->
+									<table class="table display" onclick="RowClickHandlers()" id="PatientsTable">
+									<thead>
+												  <tr>
+													<th>#</th>
+													<th>First Name</th>
+													<th>Last Name</th>
+													<th>Age</th>
+												  </tr>
+												</thead>
+												<tbody>
+												  <tr>
+													<td>1</td>
+													<td>Mark</td>
+													<td>Otto</td>
+													<td>45</td>
+												  </tr>
+												  <tr>
+													<td>2</td>
+													<td>Jacob</td>
+													<td>Thornton</td>
+													<td>8</td>
+												  </tr>
+												  <tr>
+													<td>3</td>
+													<td>Larry</td>
+													<td>the Bird</td>
+													<td>78</td>
+												  </tr>
+												</tbody>
+																			
+									</table>
+								</div>
+						</div>					
+							<div class="panel-footer">
+								<button href="#" id="newAllergyBtn" class="btn btn-primary" onClick="getPatientList2()">Get Patients</button>
+								<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal2">Add a Patient</button>
+							</div>
+						</div>					
+					
+			</div>  
+     	</div>
+	 
+        <div class="col-md-5 col-md-offset-1">
+         <div class="panel panel-default">
+		 
+		  <div class="panel-body">
+		  
+						<div class="panel panel-info">
+								<div class="panel-heading" id="PtID4Statements">Details</div>
+								
+								<input type="text" class="form-control" placeholder="Filter" onkeyup="filter(this, 'StatementsTable', '1')">
+								<!---->
+								<div>
+									<div class="table-responsive">
+										<table class="table" id="StatementsTable">
+										<thead>
+													  <tr>
+														<th>#</th>
+														<th>Date</th>
+														<th>Note</th>
+														<th>Number</th>
+													  </tr>
+													</thead>
+													<tbody>
+													  <tr>
+														<td>1</td>
+														<td>2/2</td>
+														<td>Admitted to ED. Time 2134h</td>
+														<td>45</td>
+													  </tr>
+													  <tr>
+														<td>2</td>
+														<td>4/2</td>
+														<td>Thoracic Pain noted. It was very bad. He had spent ages trying to get to sleep.</td>
+														<td>8</td>
+													  </tr>
+													  <tr>
+														<td>3</td>
+														<td>7/2</td>
+														<td>Paracetamol 1g qds x 5/7</td>
+														<td>78</td>
+													  </tr>
+													</tbody>
+																				
+										</table>
+									</div>
+							</div>					
+								<div class="panel-footer">
+									<button href="#" id="newNoteBtn" class="btn btn-primary" onClick="getPatientStatements()">Get Statements</button>
+									<!--
+									<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">Enter Patient Data</button>
+									-->
+									<button class="btn btn-primary btn-sm" id="Btn3">Enter Patient Data</button>
+								</div>
+						</div>
+		  </div>
+		 
+		  
+		</div>
+
+		           
+        </div>
+		</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Data Entry Widget</h4>
+      </div>
+      <div class="modal-body">
+       <div class="container">
+			<h3>Data Widget</h3>
+			<input type="text" class="form-control" id="PatientID" value="1234">
+			<!--
+			<input type="text" class="form-control" id="PatientID" placeholder="Enter ID_">
+			-->
+			<input type="textarea" class="form-control"  id="widget3" value=""/>
+		</div> <!-- /container -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="addStatements2PatientEHR()">Add Statement(s)</button>
+		
+      </div>
+    </div>
+  </div>
+</div>		
+
+<!-- Button trigger modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Add Patient</h4>
+      </div>
+      <div class="modal-body">
+			<form class="form-inline" role="form">
+				 <div class="form-group">
+						<label class="sr-only" for="PatientNameInput">Patient ID</label>
+								<input type="text" class="form-control" id="PatientID" placeholder="Enter Patient ID">
+						<label class="sr-only" for="PatientNameInput">Patient Name</label>
+								<input type="text" class="form-control" id="PatientNameInput" placeholder="Enter Patient Name">
+						<label class="sr-only" for="PatientAge">Patient Age</label>
+								<input type="text" class="form-control" id="PatientAge" placeholder="Enter Age">
+						<label class="sr-only" for="PatientSex">Patient Sex - Male/Female</label>
+								<input type="text" class="form-control" id="PatientSex" placeholder="Male/Female">	
+				</div>
+			</form>
+			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="add2PatientM()">Add a Patient</button>
+      </div>
+    </div>
+  </div>
+  
+  
+  
+  
+</div>		
+
+
+      <hr>
+
+      <footer>
+        <p>ClinUIP v3 MVP 2014</p>
+      </footer>
+	  
+    </div> 
+
+    
+   
+
+	</body>
+</html>
