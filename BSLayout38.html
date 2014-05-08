@@ -83,7 +83,10 @@
 			});
 			
 			
-			/// Data input widget script	
+			/// Data input widget script
+			//  Note that to process the input the user needs to press enter after each statement
+			// that will put the statement in blue with "" on each side
+			// that will then be processed by this script
 				$('#widget3').inputosaurus({
 				width : '350px',
 				autoCompleteSource : 
@@ -383,6 +386,9 @@ $('#PatientID').val(filter); // needed to use this approach to pass value to mod
 	
 	
 
+function showStatements() {
+console.log ("Lets show this :" + document.getElementById('widget3').value); 
+};	
 
 // this is where the EWD scripts come in and start the communication to EWD on Node.js and the M /JSON database
 	
@@ -451,8 +457,9 @@ params: {
 		"ID": document.getElementById('PatientID').value,
 		"Statement": document.getElementById('widget3').value
 		}
+	
 });
-console.log("PtStatement ParaMs:" + params);
+console.log("PtStatement ParaMs:" + document.getElementById('widget3').value);
 console.log("sending Statement to M");
 }; //end of add2PaientM function
 
@@ -541,6 +548,9 @@ setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", IDtopass
 
 
 }; // end of onSocketMessage
+
+
+
 </script>
 	
 	
@@ -733,13 +743,13 @@ setStatementsTable(ListPatientStatements.Statements, "ID", "Statement", IDtopass
 			<!--
 			<input type="text" class="form-control" id="PatientID" placeholder="Enter ID_">
 			-->
-			<input type="textarea" class="form-control"  id="widget3" value=""/>
+			<input type="textarea" class="form-control"  id="widget3" value =""/>
 		</div> <!-- /container -->
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" onclick="addStatements2PatientEHR()">Add Statement(s)</button>
-		
+		<button type="button" class="btn btn-primary" onclick="showStatements()">Test Statement(s)</button>
       </div>
     </div>
   </div>
